@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: ieum
+  profiles:
+    default: local
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 30MB
+  thymeleaf:
+    cache: false
+  mail:
+    host: ${IEUM_MAIL_HOST:smtp.gmail.com}
+    port: ${IEUM_MAIL_PORT:587}
+    username: ${IEUM_MAIL_USERNAME:local@ieum.dev}
+    password: ${IEUM_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          # JavaMail 기본값은 무한 대기 — SMTP가 멈추면 발송 스레드가 영영 안 돌아온다
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+server:
+  port: 8080
+ieum:
+  base-url: ${IEUM_BASE_URL:http://localhost:8080}
+  upload:
+    certification-path: ${IEUM_CERTIFICATION_UPLOAD_PATH:${user.home}/ieum/uploads/certifications}
+matching:
+  scheduler:
+    # 시간 기반 자동전이(만료/노쇼/자동완료/대화방 종료) 스케줄러. 기본 off — 데모/운영 시 true로 켠다.
+    enabled: false
+    fixed-delay-ms: 60000

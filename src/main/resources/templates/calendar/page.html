@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout :: layout(~{::content})}">
+<th:block th:fragment="content">
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- 헤더 -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-xl font-bold text-ink">일정 달력</h1>
+            <p class="text-sm text-gray-400 mt-0.5" th:text="${userRole == 'USER'} ? '내 매칭 요청 일정을 확인하세요' : '지원한 매칭 일정을 확인하세요'">일정 안내</p>
+        </div>
+        <a th:href="${userRole == 'USER'} ? @{/disabled/mypage} : @{/caregiver/mypage}"
+           class="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 hover:text-ink-muted hover:bg-surface-hover rounded-xl transition-all">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            마이페이지
+        </a>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-5">
+
+        <!-- 달력 영역 -->
+        <div class="flex-1 bg-surface rounded-2xl border border-line shadow-sm overflow-hidden">
+            <!-- 월 네비게이션 -->
+            <div class="flex items-center justify-between px-5 py-4 border-b border-line">
+                <button onclick="prevMonth()" class="p-2 rounded-xl hover:bg-surface-muted transition-colors">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <h2 id="calMonthTitle" class="text-base font-bold text-ink">2026년 6월</h2>
+                <button onclick="nextMonth()" class="p-2 rounded-xl hover:bg-surface-muted transition-colors">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+
+            <!-- 요일 헤더 -->
+            <div class="grid grid-cols-7 border-b border-line">
+                <div th:each="day : ${ {'일','월','화','수','목','금','토'} }"
+                     th:text="${day}"
+                     class="py-2 text-center text-xs font-semibold text-gray-400"></div>
+            </div>
+
+            <!-- 날짜 그리드 -->
+            <div id="calGrid" class="grid grid-cols-7"></div>
+
+            <!-- 범례 -->
+            <div class="px-5 py-3 border-t border-line flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="flex items-center gap-1.5 text-xs text-gray-500">
+                        <span id="legendSupporting" class="w-3 h-3 rounded-full border-2 flex-shrink-0"></span>
+                        <span th:text="${userRole == 'USER'} ? '등록 일정' : '지원 중'">등록 일정</span>
+                    </span>
+                    <span class="flex items-center gap-1.5 text-xs text-gray-500">
+                        <span id="legendMatched" class="w-3 h-3 rounded-full flex-shrink-0"></span>매칭 확정
+                    </span>
+                    <span class="flex items-center gap-1.5 text-xs text-gray-500">
+                        <span id="legendCompleted" class="w-3 h-3 rounded-full flex-shrink-0"></span>활동 완료
+                    </span>
+                    <span class="flex items-center gap-1.5 text-xs text-gray-500">
+                        <span id="legendToday" class="w-3.5 h-3.5 rounded flex-shrink-0"></span>오늘
+                    </span>
+                </div>
+                <span th:if="${userRole == 'USER'}" class="ml-auto text-xs text-gray-400">빈 날짜 클릭 → 일정 등록</span>
+            </div>
+        </div>
+
+        <!-- 사이드 패널: 선택된 날짜 이벤트 -->
+        <div class="lg:w-72 flex-shrink-0">
+            <div id="eventPanel" class="bg-surface rounded-2xl border border-line shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-line">
+                    <p id="eventPanelDate" class="text-sm font-bold text-ink-muted">날짜를 선택하세요</p>
+                </div>
+                <div id="eventPanelContent" class="px-5 py-8 text-center text-sm text-gray-400">
+                    달력에서 날짜를 클릭하면<br>일정이 표시됩니다
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<script th:inline="javascript">
+const USER_ROLE = /*[[${userRole}]]*/ 'USER';
+
+// 다크모드에서는 채도를 유지하되 한 단계 밝은 색상으로 바꿔 어두운 배경에서도 가시성을 유지한다.
+const IS_DARK = document.documentElement.getAttribute('data-theme') === 'dark';
+const ROLE_COLOR = USER_ROLE === 'USER' ? (IS_DARK ? '#818cf8' : '#6366f1') : (IS_DARK ? '#2dd4bf' : '#14b8a6');
+const MATCHED_COLOR = IS_DARK ? '#e879f9' : '#d946ef';
+const COMPLETED_COLOR = IS_DARK ? '#fb923c' : '#f97316';
+const SUPPORT_BORDER = 'rgb(var(--color-ink))';
+// 오늘 셀 배경 하이라이트 — 역할색 저채도 틴트. 다크는 원래도 대비가 충분해 그대로 두고,
+// 라이트(시스템 설정이 라이트로 해석된 경우 포함 — IS_DARK가 곧 해석된 테마)는 배경이 밝아
+// 잘 안 보이므로 한 단계 더 진하게 준다.
+const TODAY_BG = USER_ROLE === 'USER'
+    ? (IS_DARK ? 'rgba(129,140,248,0.24)' : 'rgba(99,102,241,0.20)')
+    : (IS_DARK ? 'rgba(45,212,191,0.24)' : 'rgba(20,184,166,0.20)');
+
+function initLegend() {
+    const supporting = document.getElementById('legendSupporting');
+    supporting.style.borderColor = SUPPORT_BORDER;
+    document.getElementById('legendMatched').style.background = MATCHED_COLOR;
+    document.getElementById('legendCompleted').style.background = COMPLETED_COLOR;
+    const lt = document.getElementById('legendToday');
+    lt.style.background = TODAY_BG;
+    lt.style.border = `1px solid ${ROLE_COLOR}`;
+}
+
+let currentYear, currentMonth;
+let allEvents = [];
+let selectedDate = null;
+
+const today = new Date();
+
+async function loadEvents() {
+    try {
+        const res = await fetch('/api/calendar/events');
+        allEvents = await res.json();
+        renderCalendar();
+    } catch (e) {
+        console.error('이벤트 로드 실패', e);
+        renderCalendar();
+    }
+}
+
+function buildDateMap(year, month) {
+    const map = {};
+    allEvents.forEach(ev => {
+        const start = ev.startDate || ev.date;
+        const end = ev.endDate || start;
+        const isSingle = start === end;
+        let cur = new Date(start + 'T00:00');
+        const endD = new Date(end + 'T00:00');
+        let first = true;
+        while (cur <= endD) {
+            if (cur.getFullYear() === year && cur.getMonth() === month) {
+                const ds = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
+                const isLast = cur.getTime() === endD.getTime();
+                const pos = isSingle ? 'single' : (first ? 'start' : (isLast ? 'end' : 'mid'));
+                if (!map[ds]) map[ds] = [];
+                map[ds].push({...ev, position: pos});
+            }
+            cur.setDate(cur.getDate() + 1);
+            first = false;
+        }
+    });
+    return map;
+}
+
+function renderCalendar() {
+    const year = currentYear, month = currentMonth;
+    document.getElementById('calMonthTitle').textContent = `${year}년 ${month + 1}월`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const dateMap = buildDateMap(year, month);
+
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+
+    for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        empty.style.cssText = 'min-height:76px; position:relative; border-bottom:1px solid var(--cal-line); border-right:1px solid var(--cal-line);';
+        grid.appendChild(empty);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const evs = dateMap[dateStr] || [];
+        const isToday = dateStr === todayStr;
+        const isSelected = dateStr === selectedDate;
+        const dow = (firstDay + d - 1) % 7;
+
+        const cell = document.createElement('div');
+        cell.style.cssText = 'min-height:76px; position:relative; border-bottom:1px solid var(--cal-line); border-right:1px solid var(--cal-line); cursor:pointer;';
+        if (isSelected) cell.style.background = 'rgb(var(--color-surface-hover))';
+        cell.onmouseenter = () => { if (!isSelected) cell.style.background = 'rgb(var(--color-surface-muted))'; };
+        cell.onmouseleave = () => { if (!isSelected) cell.style.background = ''; };
+
+        // 오늘 셀 배경 하이라이트 — 셀 배경(hover/선택)보다 위, 이벤트 바(z-index:1)보다 아래에 깔아
+        // hover·선택 시에도 오늘 표시가 유지되고 매칭/완료 원과는 겹치지 않는다.
+        if (isToday) {
+            const todayHi = document.createElement('span');
+            todayHi.style.cssText = `position:absolute; inset:3px; border-radius:8px; background:${TODAY_BG}; z-index:0;`;
+            cell.appendChild(todayHi);
+        }
+
+        // 이벤트 바 (날짜 숫자 뒤에 배치, 숫자원과 동일한 높이)
+        const primaryEv = evs.find(e => e.type === 'matched') || evs.find(e => e.type === 'completed') || evs[0];
+        if (primaryEv && primaryEv.position !== 'single') {
+            const bar = document.createElement('div');
+            bar.style.cssText = `position:absolute; top:10px; height:34px; z-index:1;`;
+            bar.style.background = primaryEv.type === 'matched'
+                ? (IS_DARK ? 'rgba(232,121,249,0.22)' : 'rgba(217,70,239,0.18)')
+                : primaryEv.type === 'completed'
+                    ? (IS_DARK ? 'rgba(251,146,60,0.22)' : 'rgba(249,115,22,0.18)')
+                    : (USER_ROLE === 'USER' ? 'rgba(99,102,241,0.12)' : 'rgba(20,184,166,0.12)');
+            if (primaryEv.position === 'start') { bar.style.left = '50%'; bar.style.right = '0'; }
+            else if (primaryEv.position === 'end') { bar.style.left = '0'; bar.style.right = '50%'; }
+            else { bar.style.left = '0'; bar.style.right = '0'; }
+            cell.appendChild(bar);
+        }
+
+        // 날짜 숫자 원 — matched > completed > 나머지 순으로 우선순위
+        const markerEv = evs.find(ev => ev.position !== 'mid' && ev.type === 'matched')
+                       || evs.find(ev => ev.position !== 'mid' && ev.type === 'completed')
+                       || evs.find(ev => ev.position !== 'mid');
+
+        const numEl = document.createElement('div');
+        numEl.style.cssText = 'position:absolute; top:10px; left:50%; transform:translateX(-50%); width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:13px; font-weight:600; z-index:10;';
+        numEl.textContent = d;
+
+        // 마커 규칙(마이페이지 미니달력과 동일): 미완료(등록/지원중)=테두리만 있는 빈 원, 매칭/완료=색 채운 원.
+        // 채운 원(매칭/완료)은 서로 다른 색상이며, 역할색(오늘 표시)과도 겹치지 않는 색을 쓴다.
+        if (markerEv) {
+            if (markerEv.type === 'matched') {
+                numEl.style.background = MATCHED_COLOR;
+                numEl.style.color = 'white';
+            } else if (markerEv.type === 'completed') {
+                numEl.style.background = COMPLETED_COLOR;
+                numEl.style.color = 'white';
+            } else {
+                numEl.style.background = 'transparent';
+                numEl.style.color = 'rgb(var(--color-ink))';
+                numEl.style.border = `2px solid ${SUPPORT_BORDER}`;
+            }
+        } else if (isToday) {
+            numEl.style.fontWeight = '800';
+            numEl.style.color = ROLE_COLOR;
+        } else if (dow === 0) {
+            numEl.style.color = '#f87171';
+        } else if (dow === 6) {
+            numEl.style.color = '#60a5fa';
+        } else {
+            numEl.style.color = 'rgb(var(--color-ink))';
+        }
+        cell.appendChild(numEl);
+
+        const rawEvs = allEvents.filter(ev => {
+            const s = ev.startDate || ev.date;
+            const e = ev.endDate || s;
+            return dateStr >= s && dateStr <= e;
+        });
+        cell.addEventListener('click', () => onDateClick(dateStr, rawEvs));
+        grid.appendChild(cell);
+    }
+
+    const totalCells = firstDay + daysInMonth;
+    const remaining = (7 - (totalCells % 7)) % 7;
+    for (let i = 0; i < remaining; i++) {
+        const empty = document.createElement('div');
+        empty.style.cssText = 'min-height:76px; position:relative; border-bottom:1px solid var(--cal-line); border-right:1px solid var(--cal-line);';
+        grid.appendChild(empty);
+    }
+}
+
+function onDateClick(dateStr, events) {
+    selectedDate = dateStr;
+    renderCalendar();
+    showEventPanel(dateStr, events);
+}
+
+function showEventPanel(dateStr, events) {
+    const [y, m, d] = dateStr.split('-');
+    document.getElementById('eventPanelDate').textContent = `${y}년 ${Number(m)}월 ${Number(d)}일`;
+
+    const content = document.getElementById('eventPanelContent');
+
+    // 활동지원사는 매칭 확정·활동 완료 일정만 표시
+    const displayEvs = USER_ROLE === 'CAREGIVER'
+        ? events.filter(ev => ev.type === 'matched' || ev.type === 'completed')
+        : events;
+
+    if (displayEvs.length === 0) {
+        if (USER_ROLE === 'USER') {
+            content.innerHTML = `<div class="text-center py-4">
+                <p class="text-sm text-gray-400 mb-4">이 날짜에 일정이 없습니다</p>
+                <button onclick="promptCreateSchedule('${dateStr}')"
+                        class="w-full px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-all">
+                    + 이 날짜로 일정 등록
+                </button>
+            </div>`;
+        } else {
+            content.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">이 날짜에 확정된 일정이 없습니다</p>';
+        }
+        return;
+    }
+
+    let html = '<div class="py-2 space-y-2">';
+    displayEvs.forEach(ev => {
+        const typeLabel = ev.type === 'matched' ? '매칭 확정'
+                        : ev.type === 'completed' ? '활동 완료'
+                        : ev.type === 'registered' ? '등록 일정' : '지원 중';
+        const typeBadge = ev.type === 'matched' ? 'bg-fuchsia-50 text-fuchsia-600'
+                        : ev.type === 'completed' ? 'bg-orange-50 text-orange-600'
+                        : 'bg-surface-hover text-ink-muted';
+        const url = USER_ROLE === 'USER' ? `/disabled/board/${ev.requestId}` : `/caregiver/board/${ev.requestId}`;
+        const accentColor = USER_ROLE === 'USER' ? 'text-indigo-500' : 'text-teal-500';
+        html += `<a href="${url}" class="block p-3 rounded-xl hover:bg-surface-muted transition-colors border border-line">
+            <div class="flex items-center gap-1.5 mb-1">
+                <span class="px-1.5 py-0.5 text-[10px] font-semibold rounded-md ${typeBadge}">${typeLabel}</span>
+            </div>
+            <p class="text-sm font-semibold text-ink line-clamp-2">${escapeHtml(ev.title)}</p>
+            <p class="text-xs ${accentColor} mt-1 font-medium">상세 보기 →</p>
+        </a>`;
+    });
+
+    if (USER_ROLE === 'USER') {
+        html += `<button onclick="promptCreateSchedule('${dateStr}')"
+                    class="w-full mt-1 px-4 py-2 text-xs font-semibold text-indigo-600 border border-indigo-200 rounded-xl hover:bg-indigo-50 transition-all">
+                    + 추가 일정 등록
+                </button>`;
+    }
+    html += '</div>';
+    content.innerHTML = html;
+}
+
+function promptCreateSchedule(dateStr) {
+    if (confirm(`${dateStr.replace(/-/g, '.')}에 매칭 스케줄을 등록하시겠습니까?`)) {
+        window.location.href = `/disabled/board/create?startDate=${dateStr}&endDate=${dateStr}`;
+    }
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function prevMonth() {
+    currentMonth--;
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    selectedDate = null;
+    renderCalendar();
+    document.getElementById('eventPanelDate').textContent = '날짜를 선택하세요';
+    document.getElementById('eventPanelContent').innerHTML = '<p class="text-sm text-gray-400 text-center">달력에서 날짜를 클릭하면<br>일정이 표시됩니다</p>';
+}
+
+function nextMonth() {
+    currentMonth++;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    selectedDate = null;
+    renderCalendar();
+    document.getElementById('eventPanelDate').textContent = '날짜를 선택하세요';
+    document.getElementById('eventPanelContent').innerHTML = '<p class="text-sm text-gray-400 text-center">달력에서 날짜를 클릭하면<br>일정이 표시됩니다</p>';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    currentYear = today.getFullYear();
+    currentMonth = today.getMonth();
+    initLegend();
+    loadEvents();
+});
+</script>
+</th:block>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="content">
+<div class="mx-auto w-full max-w-lg px-4 py-6 sm:px-6 lg:px-8">
+
+    <div class="rounded-2xl border border-line bg-surface p-6 shadow-sm">
+        <p class="text-sm font-semibold text-orange-500">거래 완료</p>
+        <h1 class="mt-1 text-2xl font-bold">거래 후기 작성</h1>
+
+        <!-- 거래 상품 요약 -->
+        <div class="mt-4 rounded-xl bg-surface-alt p-3 flex items-center gap-3">
+            <div class="w-12 h-12 rounded-lg bg-slate-200 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                <img th:if="${thumbnailUrl != null}"
+                     th:src="${thumbnailUrl}"
+                     th:alt="${post.title}"
+                     class="w-full h-full object-cover">
+                <svg th:unless="${thumbnailUrl != null}"
+                     class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-ink" th:text="${post.title}">상품명</p>
+                <p class="text-xs text-slate-400"
+                   th:text="${#numbers.formatInteger(post.price, 1, 'COMMA') + '원'}">10,000원</p>
+            </div>
+        </div>
+
+        <form th:action="@{/market/review/{id}(id=${chat.id})}"
+              method="post"
+              th:object="${form}"
+              class="mt-6 space-y-5">
+            <input type="hidden" th:if="${_csrf != null}"
+                   th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+            <!-- 하트 평점 -->
+            <div>
+                <label class="mb-2 block text-sm font-semibold">매너 평점</label>
+                <div class="flex gap-2" id="starRating">
+                    <th:block th:each="i : ${#numbers.sequence(1,5)}">
+                        <button type="button"
+                                th:attr="data-value=${i}"
+                                onclick="setRating(this)"
+                                class="star-btn transition-colors">
+                            <svg class="w-8 h-8 text-slate-200 hover:text-rose-400 transition-colors" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/>
+                            </svg>
+                        </button>
+                    </th:block>
+                </div>
+                <input type="hidden" id="ratingInput" th:field="*{rating}">
+                <p th:if="${#fields.hasErrors('rating')}" th:errors="*{rating}"
+                   class="mt-1 text-sm text-red-600"></p>
+            </div>
+
+            <!-- 후기 본문 -->
+            <div>
+                <label for="body" class="mb-1 block text-sm font-semibold">
+                    후기 <span class="text-slate-400 font-normal">(선택)</span>
+                </label>
+                <textarea id="body" th:field="*{body}" rows="5"
+                          placeholder="판매자와의 거래는 어떠셨나요? 솔직한 후기를 남겨주세요."
+                          class="w-full rounded-xl border border-line-strong px-3 py-3 text-sm focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-200 resize-none"></textarea>
+            </div>
+
+            <!-- 공개 여부 -->
+            <fieldset>
+                <legend class="mb-2 text-sm font-semibold">공개 여부</legend>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                        <input type="radio" th:field="*{visibility}" value="PUBLIC"
+                               class="text-orange-500 focus:ring-orange-400">
+                        공개
+                    </label>
+                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                        <input type="radio" th:field="*{visibility}" value="PRIVATE"
+                               class="text-orange-500 focus:ring-orange-400">
+                        비공개
+                    </label>
+                </div>
+                <p th:if="${#fields.hasErrors('visibility')}" th:errors="*{visibility}"
+                   class="mt-1 text-sm text-red-600"></p>
+            </fieldset>
+
+            <button type="submit"
+                    class="w-full rounded-xl bg-orange-500 py-3 text-sm font-bold text-white hover:bg-orange-600 transition-all">
+                후기 등록하기
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function setRating(btn) {
+    const value = parseInt(btn.getAttribute('data-value'));
+    document.getElementById('ratingInput').value = value;
+    document.querySelectorAll('.star-btn svg').forEach((svg, idx) => {
+        svg.classList.toggle('text-rose-500', idx < value);
+        svg.classList.toggle('text-slate-200', idx >= value);
+    });
+}
+const existing = document.getElementById('ratingInput').value;
+if (existing) {
+    const btn = document.querySelector(`.star-btn[data-value="${existing}"]`);
+    if (btn) setRating(btn);
+}
+</script>
+</th:block>
+</html>

@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /chat/
+Disallow: /register/
+Disallow: /password-reset/
+Disallow: /matching/
+
+Sitemap: https://ieumcare.shop/sitemap.xml

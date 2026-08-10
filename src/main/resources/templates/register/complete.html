@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가입 완료 - 이음 Care Match</title>
+    <link th:href="@{/css/output.css}" rel="stylesheet">
+    <th:block th:replace="~{layout/prefs :: prefs}"></th:block>
+    <link rel="icon" type="image/x-icon" href="/images/favicon/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon/apple-touch-icon.png">
+</head>
+<body class="min-h-screen bg-surface-alt flex flex-col">
+    <div th:replace="~{fragments/register-header :: header('none')}"></div>
+
+    <main class="flex-1 flex items-center justify-center px-4 py-12">
+        <div class="w-full max-w-md text-center">
+
+            <!-- Success animation -->
+            <div class="relative inline-flex mb-8">
+                <!-- Outer glow rings -->
+                <div class="absolute inset-0 rounded-full bg-green-100 animate-ping opacity-30 scale-125"></div>
+                <div class="absolute inset-0 rounded-full bg-green-50 scale-110"></div>
+                <!-- Icon -->
+                <div class="relative w-24 h-24 bg-green-500 rounded-full flex items-center justify-center shadow-xl shadow-green-200">
+                    <svg class="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Text -->
+            <h1 class="text-3xl font-extrabold text-ink mb-3">가입이 완료되었습니다!</h1>
+            <p class="text-gray-500 text-base leading-relaxed mb-2">
+                이음 가족이 되신 것을 환영합니다 🎉
+            </p>
+            <p class="text-gray-400 text-sm mb-10">
+                이제 로그인하고 나에게 맞는 케어 파트너를<br>찾아보세요.
+            </p>
+
+            <!-- What's next card — 역할별 -->
+            <div class="bg-surface rounded-2xl border border-line shadow-sm p-6 text-left mb-8">
+                <h2 class="text-sm font-bold text-ink-muted mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                    다음 단계 안내
+                </h2>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span class="text-xs font-bold text-indigo-600">1</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-ink">로그인</p>
+                            <p class="text-xs text-gray-400 mt-0.5">가입한 이메일과 비밀번호로 로그인하세요.</p>
+                        </div>
+                    </li>
+                    <!-- 케어메이트 전용 -->
+                    <th:block th:if="${userType == 'disabled'}">
+                    <li class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span class="text-xs font-bold text-indigo-600">2</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-ink">도움 요청 글 작성</p>
+                            <p class="text-xs text-gray-400 mt-0.5">필요한 서비스, 일시, 장소를 입력하면 바로 매칭이 시작돼요.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span class="text-xs font-bold text-teal-600">3</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-ink">활동지원사 선택</p>
+                            <p class="text-xs text-gray-400 mt-0.5">지원자 중 매칭률이 높은 활동지원사를 선택하거나 직접 초대하세요.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span class="text-xs font-bold text-purple-600">4</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-ink">MBTI 등록 (선택)</p>
+                            <p class="text-xs text-gray-400 mt-0.5">마이페이지 → 회원정보 수정에서 MBTI를 등록하면 나에게 맞는 활동지원사 추천에 성향이 반영됩니다.</p>
+                        </div>
+                    </li>
+                    </th:block>
+                    <!-- 활동지원사 전용 -->
+                    <th:block th:if="${userType == 'caregiver'}">
+                    <li class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span class="text-xs font-bold text-indigo-600">2</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-ink">프로필 완성하기</p>
+                            <p class="text-xs text-gray-400 mt-0.5">자기소개·자격증·경력을 채울수록 추천 노출과 매칭률이 높아집니다.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span class="text-xs font-bold text-teal-600">3</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-ink">매칭 게시판에서 지원</p>
+                            <p class="text-xs text-gray-400 mt-0.5">조건에 맞는 도움 요청에 지원하거나 케어메이트의 초대를 수락하세요.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span class="text-xs font-bold text-purple-600">4</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-ink">MBTI 등록 (선택)</p>
+                            <p class="text-xs text-gray-400 mt-0.5">마이페이지 → 회원정보 수정에서 MBTI를 등록하면 케어메이트와의 성향 궁합이 매칭률에 반영됩니다.</p>
+                        </div>
+                    </li>
+                    </th:block>
+                    <!-- 타입 미확인 fallback -->
+                    <th:block th:if="${userType == null or (userType != 'disabled' and userType != 'caregiver')}">
+                    <li class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span class="text-xs font-bold text-indigo-600">2</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-ink">프로필 완성</p>
+                            <p class="text-xs text-gray-400 mt-0.5">마이페이지에서 프로필 사진과 추가 정보를 입력하세요.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span class="text-xs font-bold text-teal-600">3</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-ink">매칭 시작</p>
+                            <p class="text-xs text-gray-400 mt-0.5">매칭 게시판에서 나에게 맞는 파트너를 찾아보세요.</p>
+                        </div>
+                    </li>
+                    </th:block>
+                </ul>
+            </div>
+
+            <!-- Action buttons — 역할별 주 CTA -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <!-- 케어메이트 → 요청 글 작성 -->
+                <a th:if="${userType == 'disabled'}" th:href="@{/login}"
+                   class="flex-1 inline-flex items-center justify-center gap-2 py-3.5 bg-indigo-600 text-white font-semibold text-sm rounded-xl hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-sm shadow-indigo-100">
+                    로그인 후 요청 글 작성하기
+                </a>
+                <!-- 활동지원사 → 로그인 후 프로필 완성 -->
+                <a th:if="${userType == 'caregiver'}" th:href="@{/login}"
+                   class="flex-1 inline-flex items-center justify-center gap-2 py-3.5 bg-teal-600 text-white font-semibold text-sm rounded-xl hover:bg-teal-700 active:scale-[0.98] transition-all shadow-sm shadow-teal-100">
+                    로그인 후 프로필 완성하기
+                </a>
+                <!-- fallback -->
+                <a th:if="${userType == null or (userType != 'disabled' and userType != 'caregiver')}" th:href="@{/login}"
+                   class="flex-1 inline-flex items-center justify-center gap-2 py-3.5 bg-indigo-600 text-white font-semibold text-sm rounded-xl hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-sm shadow-indigo-100">
+                    로그인하기
+                </a>
+                <a th:href="@{/}"
+                   class="flex-1 inline-flex items-center justify-center gap-2 py-3.5 border-2 border-line-strong text-ink-muted font-semibold text-sm rounded-xl hover:border-gray-300 hover:bg-surface-muted active:scale-[0.98] transition-all">
+                    홈으로 이동
+                </a>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>

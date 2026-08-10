@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(~{::content})}">
+<th:block th:fragment="content">
+
+<!-- CKEditor 5 v41 -->
+<link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.css">
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+<style>
+    .ck-content { font-size: 0.875rem; line-height: 1.75; color: #374151; }
+    .ck-content p { margin-bottom: 0.75em; }
+    .ck-content h2 { font-size: 1.125rem; font-weight: 700; margin: 1em 0 0.5em; }
+    .ck-content h3 { font-size: 1rem; font-weight: 600; margin: 0.75em 0 0.4em; }
+    .ck-content ul, .ck-content ol { padding-left: 1.5em; margin-bottom: 0.75em; }
+    .ck-content li { margin-bottom: 0.25em; }
+    .ck-content blockquote { border-left: 3px solid #e0e7ff; padding-left: 1em; color: #6366f1; margin: 0.75em 0; }
+    .ck-content img { max-width: 100%; height: auto; border-radius: 0.5rem; }
+    .ck-content a { color: #4f46e5; text-decoration: underline; }
+    .ck-editor__editable { min-height: 260px; }
+</style>
+
+<div th:attr="data-page-title='문의 상세'">
+
+    <!-- 브레드크럼 -->
+    <div class="flex items-center gap-3 mb-6">
+        <a th:href="@{/admin/inquiries}"
+           class="flex items-center gap-1.5 text-sm text-slate-500 hover:text-ink-muted transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            문의 목록
+        </a>
+        <span class="text-slate-300">/</span>
+        <span class="text-sm font-medium text-ink-muted" th:text="${inquiry.title}">제목</span>
+    </div>
+
+    <!-- 플래시 메시지 -->
+    <div th:if="${message}"
+         class="mb-4 px-4 py-3 rounded-xl bg-teal-50 border border-teal-200 text-sm text-teal-700"
+         th:text="${message}"></div>
+
+    <div class="space-y-4">
+
+        <!-- 문의 삭제 -->
+        <div class="flex justify-end">
+            <form th:action="@{/admin/inquiries/{id}/delete(id=${inquiry.id})}" method="post"
+                  onsubmit="return confirm('정말 삭제하시겠습니까?')">
+                <button type="submit"
+                        class="px-4 py-2 text-sm font-semibold text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-colors">
+                    문의 삭제
+                </button>
+            </form>
+        </div>
+
+        <!-- 문의 내용 -->
+        <div class="bg-surface rounded-2xl border border-line p-6">
+            <!-- 배지 -->
+            <div class="flex items-center gap-2 flex-wrap mb-4">
+                <span th:text="${inquiry.category.label()}"
+                      class="px-2 py-0.5 text-xs font-medium rounded-md bg-slate-100 text-slate-500">분류</span>
+                <span th:if="${inquiry.isSecret}"
+                      class="flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-md bg-slate-100 text-slate-500">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                    비밀글
+                </span>
+            </div>
+
+            <h3 class="text-base font-semibold text-ink mb-3" th:text="${inquiry.title}">제목</h3>
+
+            <dl class="space-y-1.5 mb-4 text-xs text-slate-400">
+                <div class="flex gap-3">
+                    <dt>작성자</dt>
+                    <dd th:text="${inquiry.author?.email ?: '-'}">-</dd>
+                </div>
+                <div class="flex gap-3">
+                    <dt>등록일</dt>
+                    <dd th:text="${#temporals.format(inquiry.createdAt, 'yyyy.MM.dd HH:mm')}">-</dd>
+                </div>
+            </dl>
+
+            <div class="border-t border-line pt-4 ck-content" th:utext="${inquiry.body}">내용</div>
+        </div>
+
+        <!-- 답변 상태 관리 -->
+        <div class="bg-surface rounded-2xl border border-line px-5 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-semibold text-ink-muted">답변 상태</span>
+                <span th:text="${inquiry.status.name() == 'PENDING' ? '미답변' : '답변완료'}"
+                      th:classappend="${inquiry.status.name() == 'PENDING'} ? 'bg-amber-50 text-amber-600' : 'bg-teal-50 text-teal-600'"
+                      class="px-2.5 py-1 text-xs font-semibold rounded-full">상태</span>
+            </div>
+            <form th:action="@{/admin/inquiries/{id}/status(id=${inquiry.id})}" method="post">
+                <button type="submit"
+                        th:text="${inquiry.status.name() == 'PENDING' ? '답변완료로 변경' : '미답변으로 변경'}"
+                        th:classappend="${inquiry.status.name() == 'PENDING'} ? 'bg-teal-50 text-teal-600 border-teal-200 hover:bg-teal-100' : 'bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100'"
+                        class="px-3.5 py-1.5 text-xs font-semibold rounded-xl border transition-colors">
+                    상태 변경
+                </button>
+            </form>
+        </div>
+
+        <!-- 기존 답변 표시 -->
+        <div th:if="${inquiry.reply != null}"
+             class="bg-indigo-50 rounded-2xl border border-indigo-100 p-6">
+            <div class="flex items-center gap-2 mb-3">
+                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                </svg>
+                <span class="text-sm font-semibold text-indigo-700">등록된 답변</span>
+                <span class="text-xs text-indigo-400 ml-auto"
+                      th:text="${#temporals.format(inquiry.reply.createdAt, 'yyyy.MM.dd HH:mm')}">-</span>
+            </div>
+            <div class="ck-content text-indigo-900" th:utext="${inquiry.reply.body}">답변 내용</div>
+        </div>
+
+        <!-- 답변 작성/수정 폼 -->
+        <div class="bg-surface rounded-2xl border border-line p-6">
+            <h4 class="text-sm font-semibold text-ink-muted mb-4"
+                th:text="${inquiry.reply != null ? '답변 수정' : '답변 작성'}">답변 작성</h4>
+            <form id="replyForm" th:action="@{/admin/inquiries/{id}/reply(id=${inquiry.id})}"
+                  th:object="${replyForm}" method="post" class="space-y-3">
+                <div id="ckReplyTarget"></div>
+                <textarea id="replyBodyTextarea" th:field="*{body}" class="hidden"
+                          th:text="${inquiry.reply != null ? inquiry.reply.body : ''}"></textarea>
+                <p th:if="${#fields.hasErrors('body')}" th:errors="*{body}"
+                   class="text-xs text-red-500"></p>
+                <div class="flex justify-end">
+                    <button type="submit"
+                            th:text="${inquiry.reply != null ? '답변 수정' : '답변 등록'}"
+                            class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-100">
+                        답변 등록
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+<script th:inline="javascript">
+(function () {
+    const csrfToken  = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '';
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+    const initialData = document.getElementById('replyBodyTextarea').value || '';
+
+    function UploadAdapterPlugin(editor) {
+        editor.plugins.get('FileRepository').createUploadAdapter = (loader) => ({
+            upload() {
+                return loader.file.then(file => new Promise((resolve, reject) => {
+                    const fd = new FormData();
+                    fd.append('upload', file);
+                    fetch('/admin/notices/editor-image', {
+                        method: 'POST',
+                        headers: { [csrfHeader]: csrfToken },
+                        body: fd
+                    })
+                    .then(r => r.ok ? r.json() : Promise.reject('업로드 실패'))
+                    .then(data => resolve({ default: data.url }))
+                    .catch(reject);
+                }));
+            },
+            abort() {}
+        });
+    }
+
+    ClassicEditor.create(document.getElementById('ckReplyTarget'), {
+        extraPlugins: [UploadAdapterPlugin],
+        toolbar: {
+            items: ['bold', 'italic', '|', 'bulletedList', 'numberedList', '|', 'blockQuote', 'link', '|', 'uploadImage', '|', 'undo', 'redo']
+        },
+        initialData
+    }).then(editor => {
+        document.getElementById('replyForm').addEventListener('submit', () => {
+            document.getElementById('replyBodyTextarea').value = editor.getData();
+        });
+    }).catch(err => {
+        console.error('CKEditor 초기화 오류:', err);
+    });
+})();
+</script>
+
+</th:block>
+</html>

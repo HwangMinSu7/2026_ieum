@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{admin/layout :: layout(~{::content})}">
+<th:block th:fragment="content">
+<div>
+
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-xl font-bold text-ink">신고 관리</h2>
+            <p class="text-sm text-slate-500 mt-0.5">접수된 신고를 검토하고 처리 상태를 변경하거나 대상을 정지할 수 있습니다.</p>
+        </div>
+    </div>
+
+    <div th:if="${message}"
+         class="mb-4 px-4 py-3 rounded-xl bg-teal-50 border border-teal-200 text-sm text-teal-700"
+         th:text="${message}"></div>
+
+    <!-- 탭 필터 -->
+    <div class="flex gap-1 mb-4 bg-slate-100 p-1 rounded-xl w-fit">
+        <a th:href="@{/admin/reports(type='all')}"
+           th:classappend="${activeType == 'all'} ? ' bg-surface shadow-sm text-ink font-semibold' : ' text-slate-500 hover:text-ink-muted'"
+           class="px-4 py-1.5 rounded-lg text-sm transition-all">전체</a>
+        <a th:href="@{/admin/reports(type='matching')}"
+           th:classappend="${activeType == 'matching'} ? ' bg-surface shadow-sm text-ink font-semibold' : ' text-slate-500 hover:text-ink-muted'"
+           class="px-4 py-1.5 rounded-lg text-sm transition-all">매칭 게시판</a>
+        <a th:href="@{/admin/reports(type='market')}"
+           th:classappend="${activeType == 'market'} ? ' bg-surface shadow-sm text-ink font-semibold' : ' text-slate-500 hover:text-ink-muted'"
+           class="px-4 py-1.5 rounded-lg text-sm transition-all">이음마켓</a>
+    </div>
+
+    <div class="bg-surface rounded-2xl border border-line overflow-hidden">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-line bg-surface-alt">
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">구분</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">신고자</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">대상</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">사유</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">상세</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">상태</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">접수일</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">처리</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-line">
+                <th:block th:each="report : ${reports}">
+                <tr class="hover:bg-surface-alt transition-colors align-top">
+                    <td class="px-5 py-3.5">
+                        <span th:if="${report.marketChatId != null}"
+                              class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-orange-50 text-orange-600">마켓</span>
+                        <span th:if="${report.conversationId != null}"
+                              class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-50 text-indigo-600">매칭</span>
+                        <span th:if="${report.marketChatId == null and report.conversationId == null}"
+                              class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-slate-100 text-slate-400">기타</span>
+                        <div th:if="${report.marketChatId != null}" class="mt-1">
+                            <a th:href="@{/market/chat/{id}(id=${report.marketChatId})}"
+                               target="_blank"
+                               class="text-[11px] text-orange-400 hover:text-orange-600 underline">채팅방 보기</a>
+                        </div>
+                        <div th:if="${report.conversationId != null}" class="mt-1">
+                            <a th:href="@{/admin/matching/{id}(id=${report.conversationId})}"
+                               class="text-[11px] text-indigo-400 hover:text-indigo-600 underline">매칭 상세 보기</a>
+                        </div>
+                    </td>
+                    <td class="px-5 py-3.5 text-ink-muted text-xs" th:text="${report.reporter.email}">-</td>
+                    <td class="px-5 py-3.5">
+                        <div class="text-ink-muted text-xs" th:text="${report.target.email}">-</div>
+                        <div class="mt-0.5">
+                            <span th:if="${report.target.status.name() == 'WARNED'}"
+                                  class="text-[11px] font-semibold text-amber-600">⚠ 경고회원</span>
+                            <span th:if="${report.target.status.name() == 'BANNED'}"
+                                  class="text-[11px] font-semibold text-red-600">🚫 정지회원</span>
+                        </div>
+                        <div class="mt-1">
+                            <a th:href="@{/admin/users/{id}(id=${report.target.id})}"
+                               class="text-[11px] font-medium text-slate-400 hover:text-ink-muted underline">회원 관리 →</a>
+                        </div>
+                    </td>
+                    <td class="px-5 py-3.5 text-ink-muted text-xs" th:text="${report.reason.label}">사유</td>
+                    <td class="px-5 py-3.5">
+                        <p class="text-ink-muted text-xs truncate max-w-xs" th:text="${report.detail != null ? report.detail : '-'}">상세</p>
+                    </td>
+                    <td class="px-5 py-3.5">
+                        <span th:text="${report.status.label}"
+                              th:classappend="${report.status.name() == 'RECEIVED' ? 'bg-amber-50 text-amber-600' : report.status.name() == 'REVIEWING' ? 'bg-blue-50 text-blue-600' : report.status.name() == 'RESOLVED' ? 'bg-teal-50 text-teal-600' : 'bg-slate-100 text-slate-400'}"
+                              class="px-2 py-0.5 text-xs font-semibold rounded-full">상태</span>
+                    </td>
+                    <td class="px-5 py-3.5 text-slate-400 text-xs"
+                        th:text="${#temporals.format(report.createdAt, 'yyyy.MM.dd HH:mm')}">-</td>
+                    <td class="px-5 py-3.5">
+                        <form th:action="@{/admin/reports/{id}/status(id=${report.id})}" method="post" class="flex items-center gap-1">
+                            <label class="sr-only" th:for="'status-' + ${report.id}">신고 상태 변경</label>
+                            <select name="status" th:id="'status-' + ${report.id}"
+                                    class="px-2 py-1 text-xs border border-line-strong rounded-lg bg-surface">
+                                <option th:each="st : ${reportStatuses}" th:value="${st}"
+                                        th:text="${st.label}" th:selected="${st == report.status}">상태</option>
+                            </select>
+                            <button type="submit" class="text-xs font-medium text-indigo-500 hover:text-indigo-700">변경</button>
+                        </form>
+                    </td>
+                </tr>
+                </th:block>
+                <tr th:if="${#lists.isEmpty(reports)}">
+                    <td colspan="8" class="px-5 py-10 text-center text-sm text-slate-400">접수된 신고가 없습니다.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div th:replace="~{fragments/pagination :: pager(${currentPage}, ${totalPages}, ${startPage}, ${endPage}, '/admin/reports?')}"></div>
+
+</div>
+</th:block>
+</html>

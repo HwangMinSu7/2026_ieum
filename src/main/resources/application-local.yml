@@ -1,0 +1,47 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${IEUM_DB_URL:jdbc:mysql://localhost:3306/db7?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${IEUM_DB_USERNAME:db7}
+    password: ${IEUM_DB_PASSWORD:1234}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      max-lifetime: 580000        # 9분 40초 — MySQL wait_timeout(기본 600초)보다 짧게
+      connection-timeout: 30000
+      idle-timeout: 300000
+      keepalive-time: 120000      # 2분마다 커넥션 유지 핑 전송
+      connection-test-query: SELECT 1
+      leak-detection-threshold: 20000  # 20초 넘게 안 돌려주면 점유 스레드 스택을 로그로 남긴다
+      # 드라이버 기본값(socketTimeout=0)이면 죽은 커넥션에서 무한 대기 → 커넥션이 영구 점유된다
+      data-source-properties:
+        connectTimeout: 5000
+        socketTimeout: 30000
+        tcpKeepAlive: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+  mail:
+    host: ${IEUM_MAIL_HOST:smtp.gmail.com}
+    port: ${IEUM_MAIL_PORT:587}
+    username: ${IEUM_MAIL_USERNAME:}
+    password: ${IEUM_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: smtp.gmail.com
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax

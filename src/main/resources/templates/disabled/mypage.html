@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/layout :: layout(~{::content})}">
+<th:block th:fragment="content">
+<!-- 알림 메시지 -->
+<div th:if="${successMessage != null or errorMessage != null or message != null}"
+     class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+    <div th:if="${successMessage}" th:text="${successMessage}"
+         class="mb-2 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"></div>
+    <div th:if="${errorMessage}" th:text="${errorMessage}"
+         class="mb-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"></div>
+    <div th:if="${message}" th:text="${message}"
+         class="mb-2 rounded-md border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800"></div>
+</div>
+
+<!-- 풀너비 컬러 배너 (프로필 + 미니달력) -->
+<div class="bg-indigo-600 w-full">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="flex flex-col lg:flex-row gap-8 items-start">
+
+    <!-- 프로필 요약 (w-full: 세로 배치에서 items-start로 폭이 줄어 구분선이 잘리는 것 방지) -->
+    <div class="flex-1 w-full text-white relative">
+        <div class="relative flex items-top gap-5">
+            <!-- 아바타 -->
+            <div class="w-20 h-20 rounded-full overflow-hidden flex-shrink-0 bg-white/20 shadow-md">
+                <img id="mypage-profile-img"
+                     th:src="${profileImageUrl}"
+                     th:class="${profileImageUrl != null ? 'w-full h-full object-cover object-top' : 'hidden'}"
+                     style="transform: translateZ(0);"
+                     onerror="this.classList.add('hidden'); var d=document.getElementById('profile-default'); if(d){d.classList.remove('hidden');}"
+                     alt="프로필 이미지">
+                <div id="profile-default"
+                     th:class="${profileImageUrl == null ? 'w-full h-full flex items-center justify-center text-white/80 text-2xl font-black' : 'hidden w-full h-full flex items-center justify-center text-white/80 text-2xl font-black'}"
+                     th:text="${userName != null ? userName.substring(0,1) : '?'}">홍</div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="px-2.5 py-0.5 bg-white/20 text-white text-xs font-semibold rounded-full">케어메이트</span>
+                    <span th:if="${userProfile != null and userProfile.mbtiType != null}"
+                          class="px-2 py-0.5 bg-white/20 text-white text-xs font-bold rounded-full tracking-wide"
+                          th:text="${userProfile.mbtiType}">INFP</span>
+                </div>
+                <h1 class="text-xl font-extrabold" th:text="${userName != null ? userName + ' 님' : '홍길동 님'}">홍길동 님</h1>
+                <p class="text-indigo-200 text-sm mt-0.5" th:text="${userEmail != null ? userEmail : 'user@email.com'}">user@email.com</p>
+                <input type="file" id="profileFileInput" accept="image/*" class="hidden">
+                <button type="button" onclick="document.getElementById('profileFileInput').click()"
+                        class="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-white/20 hover:bg-white/30 border border-white/30 rounded-xl transition-all">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    프로필 등록
+                </button>
+            </div>
+        </div>
+        <!-- 간단 통계 -->
+        <div class="relative mt-5 pt-5 border-t border-white/20 space-y-3">
+            <!-- 매칭 게시판 통계 -->
+            <div>
+                <p class="text-indigo-300 text-[10px] font-semibold uppercase tracking-wider mb-2">매칭 게시판</p>
+                <div class="flex gap-4">
+                    <div class="text-center">
+                        <p class="text-xl font-bold" th:text="${totalRequests != null ? totalRequests : 0}">0</p>
+                        <p class="text-indigo-200 text-xs mt-0.5">총 요청</p>
+                    </div>
+                    <div class="w-px bg-white/20"></div>
+                    <div class="text-center">
+                        <p class="text-xl font-bold" th:text="${completedMatches != null ? completedMatches : 0}">0</p>
+                        <p class="text-indigo-200 text-xs mt-0.5">완료 매칭</p>
+                    </div>
+                    <div class="w-px bg-white/20"></div>
+                    <div class="text-center">
+                        <p class="text-xl font-bold" th:text="${writtenReviews != null ? writtenReviews : 0}">0</p>
+                        <p class="text-indigo-200 text-xs mt-0.5">작성 후기</p>
+                    </div>
+                </div>
+            </div>
+            <!-- 이음마켓 통계 -->
+            <div class="pt-2 border-t border-white/10">
+                <p class="text-orange-300 text-[10px] font-semibold uppercase tracking-wider mb-2">이음마켓</p>
+                <div class="flex gap-4 items-start">
+                    <!-- 매너온도 게이지 -->
+                    <div class="flex-1">
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <span class="text-sm">🌡️</span>
+                            <span class="text-xl font-bold"
+                                  th:text="${mannerTemperature != null ? mannerTemperature + '°C' : '36.5°C'}">36.5°C</span>
+                            <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                                  th:classappend="${mannerTemperatureRaw != null and mannerTemperatureRaw >= 75} ? 'bg-red-500/30 text-red-200'
+                                               : (${mannerTemperatureRaw != null and mannerTemperatureRaw >= 50} ? 'bg-orange-400/30 text-orange-200'
+                                               : (${mannerTemperatureRaw != null and mannerTemperatureRaw >= 36.5} ? 'bg-green-400/30 text-green-200'
+                                               : 'bg-blue-400/30 text-blue-200'))"
+                                  th:text="${mannerTemperatureRaw != null and mannerTemperatureRaw >= 75} ? '🔥 따뜻해요'
+                                          : (${mannerTemperatureRaw != null and mannerTemperatureRaw >= 50} ? '😊 좋아요'
+                                          : (${mannerTemperatureRaw != null and mannerTemperatureRaw >= 36.5} ? '🙂 보통이에요'
+                                          : '😰 낮아요'))">보통이에요</span>
+                        </div>
+                        <!-- 온도 게이지 바 -->
+                        <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all"
+                                 th:classappend="${mannerTemperatureRaw != null and mannerTemperatureRaw >= 75} ? 'bg-red-400'
+                                              : (${mannerTemperatureRaw != null and mannerTemperatureRaw >= 50} ? 'bg-orange-400'
+                                              : (${mannerTemperatureRaw != null and mannerTemperatureRaw >= 36.5} ? 'bg-green-400'
+                                              : 'bg-blue-400'))"
+                                 th:style="${'width: ' + (mannerTemperatureRaw != null ? mannerTemperatureRaw : 36.5) + '%'}"></div>
+                        </div>
+                        <p class="text-indigo-200 text-[10px] mt-1">매너온도 · 거래 후기 <span th:text="${marketTotalReviews != null ? marketTotalReviews : 0}">0</span>건</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 미니 달력 (투명 배경, 흰색 스타일) — 세로 배치에서는 위 통계와 경계선으로 구분 -->
+    <div class="lg:w-72 flex-shrink-0 w-full border-t border-white/20 pt-6 lg:border-t-0 lg:pt-0">
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span class="text-sm font-bold text-white">일정 달력</span>
+            </div>
+            <a href="/calendar" class="text-xs text-white/70 hover:text-white font-semibold transition-colors">전체 보기 →</a>
+        </div>
+        <!-- 월 네비게이션 -->
+        <div class="flex items-center justify-between mb-1">
+            <button onclick="miniPrev()" class="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+                <svg class="w-4 h-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <span id="mini-month-title" class="text-sm font-semibold text-white">2026년 6월</span>
+            <button onclick="miniNext()" class="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+                <svg class="w-4 h-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+        <!-- 요일 헤더 -->
+        <div class="grid grid-cols-7 border-b border-white/20 mb-1">
+            <div th:each="day : ${ {'일','월','화','수','목','금','토'} }"
+                 th:text="${day}"
+                 class="text-center text-[11px] font-semibold text-white/50 py-1.5"></div>
+        </div>
+        <!-- 날짜 그리드 -->
+        <div id="mini-cal-grid" class="grid grid-cols-7"></div>
+        <!-- 범례 -->
+        <div class="mt-3 pt-3 border-t border-white/20 flex items-center gap-4 flex-wrap">
+            <span class="flex items-center gap-1.5 text-[11px] text-white/70">
+                <span class="w-3 h-3 rounded-full flex-shrink-0" style="border:2px solid rgba(255,255,255,0.9)"></span>등록/지원
+            </span>
+            <span class="flex items-center gap-1.5 text-[11px] text-white/70">
+                <span class="w-3 h-3 rounded-full flex-shrink-0" style="background:#d946ef;box-shadow:0 0 0 1.5px rgba(255,255,255,0.9)"></span>매칭완료
+            </span>
+            <span class="flex items-center gap-1.5 text-[11px] text-white/70">
+                <span class="w-3 h-3 rounded-full flex-shrink-0" style="background:#f97316;box-shadow:0 0 0 1.5px rgba(255,255,255,0.9)"></span>활동완료
+            </span>
+            <span class="flex items-center gap-1.5 text-[11px] text-white/70">
+                <span class="w-3.5 h-3.5 rounded flex-shrink-0" style="background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.55)"></span>오늘
+            </span>
+        </div>
+    </div>
+
+</div><!-- /flex -->
+</div><!-- /max-w container -->
+</div><!-- /bg-indigo-600 -->
+
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+
+    <!-- MBTI 배너 (미등록 시) / 배지 (등록 시) -->
+    <div th:if="${userProfile != null and userProfile.mbtiType == null}" id="mbtiBanner"
+         class="flex items-center justify-between rounded-2xl border border-purple-200 bg-purple-50 px-4 py-3 cursor-pointer"
+         onclick="openMbtiModal()">
+        <div class="flex items-center gap-2">
+            <span class="text-purple-400">✨</span>
+            <p class="text-sm text-purple-700 font-medium">MBTI를 등록하면 나에게 맞는 활동지원사 추천에 성향이 반영됩니다.</p>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="text-xs font-semibold text-purple-600 underline">등록하기</span>
+            <button type="button" onclick="event.stopPropagation(); hideMbtiBanner()" class="text-xs text-gray-400 hover:text-ink-muted ml-1">✕</button>
+        </div>
+    </div>
+    <!-- 메인 탭 -->
+    <div class="bg-surface rounded-2xl border border-line-strong p-1.5">
+        <div class="relative flex gap-1" id="main-tab-track">
+            <div id="main-tab-pill"
+                 class="absolute top-0 left-0 h-full rounded-xl bg-indigo-600 shadow-sm transition-all duration-300 ease-out pointer-events-none"
+                 style="width: calc(100% / 3); transform: translateX(0%)"></div>
+            <button onclick="showMainTab('info', 0)" id="main-tab-btn-info"
+                    class="main-tab-btn relative z-10 flex-1 py-2.5 text-sm font-semibold text-white text-center rounded-xl transition-colors duration-300">
+                회원정보
+            </button>
+            <button onclick="showMainTab('matching', 1)" id="main-tab-btn-matching"
+                    class="main-tab-btn relative z-10 flex-1 py-2.5 text-sm font-medium text-gray-400 text-center rounded-xl transition-colors duration-300">
+                매칭게시판
+            </button>
+            <button onclick="showMainTab('market', 2)" id="main-tab-btn-market"
+                    class="main-tab-btn relative z-10 flex-1 py-2.5 text-sm font-medium text-gray-400 text-center rounded-xl transition-colors duration-300">
+                이음마켓
+            </button>
+        </div>
+    </div>
+
+    <!-- MBTI 모달 -->
+    <div id="mbtiModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeMbtiModal()"></div>
+        <div class="relative bg-surface rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-base font-bold text-ink">MBTI 설정</h3>
+                <button onclick="closeMbtiModal()" class="text-gray-400 hover:text-ink-muted text-xl leading-none">✕</button>
+            </div>
+            <form id="mbtiForm" onsubmit="saveMbti(event)">
+                <!-- 내 MBTI -->
+                <p class="text-xs font-semibold text-gray-500 mb-2">내 MBTI</p>
+                <div class="grid grid-cols-4 gap-1.5 mb-5">
+                    <label class="mbti-chip">
+                        <input type="radio" name="mbtiType" value="" class="peer sr-only"
+                               th:checked="${userProfile == null or userProfile.mbtiType == null}">
+                        <span class="block text-center py-1.5 text-xs rounded-lg border border-line-strong cursor-pointer peer-checked:bg-purple-600 peer-checked:border-purple-600 peer-checked:text-white text-gray-500 hover:border-purple-300 transition-all">없음</span>
+                    </label>
+                    <label th:each="mbti : ${mbtiTypes}" class="mbti-chip">
+                        <input type="radio" name="mbtiType" th:value="${mbti.name()}" class="peer sr-only"
+                               th:checked="${userProfile != null and userProfile.mbtiType != null and userProfile.mbtiType.name() == mbti.name()}">
+                        <span class="block text-center py-1.5 text-xs rounded-lg border border-line-strong cursor-pointer peer-checked:bg-purple-600 peer-checked:border-purple-600 peer-checked:text-white text-gray-500 hover:border-purple-300 transition-all"
+                              th:text="${mbti.name()}">INFP</span>
+                    </label>
+                </div>
+                <!-- 선호 MBTI -->
+                <p class="text-xs font-semibold text-gray-500 mb-1">선호하는 활동지원사 MBTI <span class="font-normal text-gray-400">(최대 4개)</span></p>
+                <div class="grid grid-cols-4 gap-1.5 mb-5">
+                    <label th:each="mbti : ${mbtiTypes}" class="mbti-chip">
+                        <input type="checkbox" name="preferredMbtiTypes" th:value="${mbti.name()}" class="peer sr-only"
+                               th:checked="${userProfile != null and userProfile.preferredMbtis != null and #lists.contains(userProfile.preferredMbtis.![mbtiType.name()], mbti.name())}"
+                               onchange="limitCheck(this,4)">
+                        <span class="block text-center py-1.5 text-xs rounded-lg border border-line-strong cursor-pointer peer-checked:bg-indigo-500 peer-checked:border-indigo-500 peer-checked:text-white text-gray-500 hover:border-indigo-300 transition-all"
+                              th:text="${mbti.name()}">INFJ</span>
+                    </label>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeMbtiModal()"
+                            class="flex-1 py-2.5 text-sm font-semibold text-ink-muted bg-surface-hover rounded-xl hover:bg-gray-200 transition-all">취소</button>
+                    <button type="submit"
+                            class="flex-1 py-2.5 text-sm font-semibold text-white bg-purple-600 rounded-xl hover:bg-purple-700 transition-all">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        (function() {
+            if (localStorage.getItem('hideMbtiBanner') === 'true') {
+                var el = document.getElementById('mbtiBanner');
+                if (el) el.style.display = 'none';
+            }
+        })();
+        function hideMbtiBanner() {
+            localStorage.setItem('hideMbtiBanner', 'true');
+            var el = document.getElementById('mbtiBanner');
+            if (el) el.style.display = 'none';
+        }
+        function openMbtiModal() {
+            var m = document.getElementById('mbtiModal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+        function closeMbtiModal() {
+            var m = document.getElementById('mbtiModal');
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+        function limitCheck(cb, max) {
+            var checked = document.querySelectorAll('input[name="preferredMbtiTypes"]:checked');
+            if (checked.length > max) { cb.checked = false; alert('최대 ' + max + '개까지 선택 가능합니다.'); }
+        }
+        function saveMbti(e) {
+            e.preventDefault();
+            var form = document.getElementById('mbtiForm');
+            var data = new FormData(form);
+            fetch('/api/mypage/mbti', { method: 'POST', body: data })
+                .then(function(r) { if (r.ok) { location.reload(); } else { alert('저장 실패. 다시 시도해주세요.'); } });
+        }
+    </script>
+
+    <!-- ───────── 회원정보 탭 ───────── -->
+    <div id="main-tab-info" class="main-tab-content space-y-5">
+
+        <!-- 회원정보 수정 카드 -->
+        <div class="bg-surface rounded-2xl border border-line-strong overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-line">
+                <h2 class="text-sm font-bold text-ink flex items-center gap-2">
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    회원정보
+                </h2>
+                <a th:href="@{/mypage/edit}"
+                   class="px-3 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-all">
+                    수정하기
+                </a>
+            </div>
+            <div class="divide-y divide-line">
+                <div class="flex items-center gap-3 px-5 py-3.5">
+                    <span class="text-xs text-gray-400 w-20 flex-shrink-0">이름</span>
+                    <span class="text-sm font-medium text-ink" th:text="${userName != null ? userName : '-'}">홍길동</span>
+                </div>
+                <div class="flex items-center gap-3 px-5 py-3.5">
+                    <span class="text-xs text-gray-400 w-20 flex-shrink-0">이메일</span>
+                    <span class="text-sm font-medium text-ink" th:text="${userEmail != null ? userEmail : '-'}">user@email.com</span>
+                </div>
+                <div class="flex items-center gap-3 px-5 py-3.5">
+                    <span class="text-xs text-gray-400 w-20 flex-shrink-0">연락처</span>
+                    <span class="text-sm font-medium text-ink" th:text="${phone != null ? phone : '-'}">-</span>
+                </div>
+                <div class="flex items-center gap-3 px-5 py-3.5">
+                    <span class="text-xs text-gray-400 w-20 flex-shrink-0">지역</span>
+                    <span class="text-sm font-medium text-ink" th:text="${region != null ? region : '-'}">-</span>
+                </div>
+                <div class="flex items-start gap-3 px-5 py-3.5">
+                    <span class="text-xs text-gray-400 w-20 flex-shrink-0 pt-0.5">장애 유형</span>
+                    <div class="flex flex-wrap gap-1.5" th:if="${disabilityTypes != null and !disabilityTypes.isEmpty()}">
+                        <span th:each="dt : ${disabilityTypes}"
+                              class="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-xs font-medium rounded-full"
+                              th:text="${dt}">지체장애</span>
+                    </div>
+                    <span th:unless="${disabilityTypes != null and !disabilityTypes.isEmpty()}"
+                          class="text-sm font-medium text-ink">-</span>
+                </div>
+                <div class="flex items-start gap-3 px-5 py-3.5">
+                    <span class="text-xs text-gray-400 w-20 flex-shrink-0 pt-0.5">의사소통</span>
+                    <div class="flex flex-wrap gap-1.5" th:if="${communicationMethods != null and !communicationMethods.isEmpty()}">
+                        <span th:each="cm : ${communicationMethods}"
+                              class="px-2 py-0.5 bg-surface-muted text-ink-muted text-xs rounded-full"
+                              th:text="${cm}">수어</span>
+                    </div>
+                    <span th:unless="${communicationMethods != null and !communicationMethods.isEmpty()}"
+                          class="text-sm font-medium text-ink">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 계정 관리 -->
+        <div class="bg-surface rounded-2xl border border-line-strong overflow-hidden">
+            <div class="flex items-center gap-2 px-5 py-4 border-b border-line">
+                <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <h2 class="text-sm font-bold text-ink">계정 관리</h2>
+            </div>
+            <div class="divide-y divide-line">
+                <!-- 화면 테마 -->
+                <div class="flex items-center justify-between px-5 py-3.5">
+                    <div>
+                        <p class="text-sm text-ink-muted">화면 테마</p>
+                        <p class="text-xs text-gray-400 mt-0.5">밝게/어둡게 또는 시스템 설정을 따릅니다</p>
+                    </div>
+                    <div class="inline-flex rounded-xl border border-line-strong overflow-hidden text-xs font-semibold flex-shrink-0" role="group" aria-label="화면 테마 선택">
+                        <button type="button" data-theme-option="system" aria-pressed="false"
+                                class="px-3 py-1.5 text-ink-muted hover:bg-surface-muted transition-colors">시스템</button>
+                        <button type="button" data-theme-option="dark" aria-pressed="false"
+                                class="px-3 py-1.5 text-ink-muted hover:bg-surface-muted transition-colors border-l border-line-strong">다크</button>
+                        <button type="button" data-theme-option="light" aria-pressed="false"
+                                class="px-3 py-1.5 text-ink-muted hover:bg-surface-muted transition-colors border-l border-line-strong">라이트</button>
+                    </div>
+                </div>
+                <a th:href="@{/mypage/password}"
+                   class="flex items-center justify-between px-5 py-3.5 hover:bg-surface-muted transition-colors group">
+                    <span class="text-sm text-ink-muted">비밀번호 변경</span>
+                    <svg class="w-4 h-4 text-gray-400 group-hover:text-ink-muted transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <button type="button" onclick="openWithdrawModal()"
+                        class="w-full flex items-center justify-between px-5 py-3.5 hover:bg-red-50 transition-colors group text-left">
+                    <span class="text-sm text-red-500 group-hover:text-red-600 font-medium">회원 탈퇴</span>
+                    <svg class="w-4 h-4 text-red-400 group-hover:text-red-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit"
+                            class="w-full flex items-center justify-between px-5 py-3.5 hover:bg-red-50 transition-colors group text-left">
+                        <span class="text-sm text-ink-muted font-medium">로그아웃</span>
+                        <svg class="w-4 h-4 text-gray-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ───────── 매칭게시판 탭 ───────── -->
+    <div id="main-tab-matching" class="main-tab-content hidden">
+        <div class="bg-surface rounded-2xl border border-line-strong overflow-hidden">
+            <!-- 매칭게시판 서브탭 (pill 스타일 — 메인 탭과 구분) -->
+            <div class="flex gap-2 px-4 py-3 bg-surface-muted border-b border-line">
+                <button onclick="showMatchingSubTab('requests')" id="msub-btn-requests"
+                        class="msub-btn flex-1 py-2 text-xs font-semibold rounded-xl bg-indigo-600 text-white text-center shadow-sm">
+                    내 요청 현황
+                </button>
+                <button onclick="showMatchingSubTab('reviews')" id="msub-btn-reviews"
+                        class="msub-btn flex-1 py-2 text-xs font-medium rounded-xl bg-surface text-gray-500 border border-line-strong text-center">
+                    후기
+                </button>
+            </div>
+
+            <!-- ── 내 요청 현황 서브탭 ── -->
+            <div id="msub-requests" class="msub-content">
+                <div class="flex border-b border-line px-5 pt-3 gap-1">
+                    <button type="button" onclick="showRequestTab('waiting')" id="rtab-btn-waiting"
+                            class="rtab-btn px-3 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 border-indigo-500 text-indigo-600">
+                        대기중
+                        <span class="ml-1 px-1.5 py-0.5 bg-indigo-100 text-indigo-600 rounded-full text-xs"
+                              th:text="${waitingRequests != null ? waitingRequests.size() : 0}">0</span>
+                    </button>
+                    <button type="button" onclick="showRequestTab('matched')" id="rtab-btn-matched"
+                            class="rtab-btn px-3 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 border-transparent text-gray-400 hover:text-ink-muted">
+                        매칭됨
+                        <span class="ml-1 px-1.5 py-0.5 bg-surface-hover text-gray-500 rounded-full text-xs"
+                              th:text="${matchedRequests != null ? matchedRequests.size() : 0}">0</span>
+                    </button>
+                    <button type="button" onclick="showRequestTab('completed')" id="rtab-btn-completed"
+                            class="rtab-btn px-3 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 border-transparent text-gray-400 hover:text-ink-muted">
+                        완료
+                        <span class="ml-1 px-1.5 py-0.5 bg-surface-hover text-gray-500 rounded-full text-xs"
+                              th:text="${completedRequestsList != null ? completedRequestsList.size() : 0}">0</span>
+                    </button>
+                    <button type="button" onclick="showRequestTab('expired')" id="rtab-btn-expired"
+                            class="rtab-btn px-3 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 border-transparent text-gray-400 hover:text-ink-muted">
+                        기간만료
+                        <span class="ml-1 px-1.5 py-0.5 bg-surface-hover text-gray-500 rounded-full text-xs"
+                              th:text="${expiredRequests != null ? expiredRequests.size() : 0}">0</span>
+                    </button>
+                </div>
+                <div id="rtab-waiting" class="rtab-content">
+                    <div th:if="${waitingRequests != null and !waitingRequests.isEmpty()}" id="pg-waiting-list" class="divide-y divide-line">
+                        <a th:each="req : ${waitingRequests}" th:href="@{/disabled/board/{id}(id=${req.id})}"
+                           class="pg-item block p-5 hover:bg-surface-muted transition-colors">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-xs font-semibold rounded-full">대기중</span>
+                                        <span class="text-xs text-gray-400" th:text="${req.serviceCategory != null ? req.serviceCategory.name : ''}"></span>
+                                    </div>
+                                    <p class="text-sm font-semibold text-ink truncate" th:text="${req.title}">제목</p>
+                                    <div class="flex items-center gap-3 mt-1.5 text-xs text-gray-400">
+                                        <span th:text="${#temporals.format(req.desiredStartDatetime, 'yyyy.MM.dd HH:mm')}">날짜</span>
+                                        <span th:text="${req.sido + ' ' + req.sigungu}">지역</span>
+                                    </div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-300 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                        </a>
+                    </div>
+                    <div th:if="${waitingRequests == null or waitingRequests.isEmpty()}" class="py-10 text-center text-sm text-gray-400">대기 중인 요청이 없어요</div>
+                    <div id="pg-waiting-nav" class="hidden px-5 py-3 flex items-center justify-center gap-1"></div>
+                </div>
+                <div id="rtab-matched" class="rtab-content hidden">
+                    <div th:if="${matchedRequests != null and !matchedRequests.isEmpty()}" id="pg-matched-list" class="divide-y divide-line">
+                        <a th:each="req : ${matchedRequests}" th:href="@{/disabled/board/{id}(id=${req.id})}"
+                           class="pg-item block p-5 hover:bg-surface-muted transition-colors">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span th:text="${req.status.name() == 'MATCHED' ? '매칭완료' : '진행중'}"
+                                              th:classappend="${req.status.name() == 'MATCHED' ? 'bg-teal-50 text-teal-600' : 'bg-green-50 text-green-600'}"
+                                              class="px-2 py-0.5 text-xs font-semibold rounded-full">매칭완료</span>
+                                        <span class="text-xs text-gray-400" th:text="${req.serviceCategory != null ? req.serviceCategory.name : ''}"></span>
+                                    </div>
+                                    <p class="text-sm font-semibold text-ink truncate" th:text="${req.title}">제목</p>
+                                    <div class="flex items-center gap-3 mt-1.5 text-xs text-gray-400">
+                                        <span th:text="${#temporals.format(req.desiredStartDatetime, 'yyyy.MM.dd HH:mm')}">날짜</span>
+                                        <span th:text="${req.sido + ' ' + req.sigungu}">지역</span>
+                                    </div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-300 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                        </a>
+                    </div>
+                    <div th:if="${matchedRequests == null or matchedRequests.isEmpty()}" class="py-10 text-center text-sm text-gray-400">매칭된 요청이 없어요</div>
+                    <div id="pg-matched-nav" class="hidden px-5 py-3 flex items-center justify-center gap-1"></div>
+                </div>
+                <div id="rtab-completed" class="rtab-content hidden">
+                    <div th:if="${completedRequestsList != null and !completedRequestsList.isEmpty()}" id="pg-completed-list" class="divide-y divide-line">
+                        <a th:each="req : ${completedRequestsList}" th:href="@{/disabled/board/{id}(id=${req.id})}"
+                           class="pg-item block p-5 hover:bg-surface-muted transition-colors">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 bg-surface-hover text-gray-500 text-xs font-semibold rounded-full">완료</span>
+                                        <span class="text-xs text-gray-400" th:text="${req.serviceCategory != null ? req.serviceCategory.name : ''}"></span>
+                                    </div>
+                                    <p class="text-sm font-semibold text-ink truncate" th:text="${req.title}">제목</p>
+                                    <div class="flex items-center gap-3 mt-1.5 text-xs text-gray-400">
+                                        <span th:text="${#temporals.format(req.desiredStartDatetime, 'yyyy.MM.dd HH:mm')}">날짜</span>
+                                        <span th:text="${req.sido + ' ' + req.sigungu}">지역</span>
+                                    </div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-300 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                        </a>
+                    </div>
+                    <div th:if="${completedRequestsList == null or completedRequestsList.isEmpty()}" class="py-10 text-center text-sm text-gray-400">완료된 요청이 없어요</div>
+                    <div id="pg-completed-nav" class="hidden px-5 py-3 flex items-center justify-center gap-1"></div>
+                </div>
+                <div id="rtab-expired" class="rtab-content hidden">
+                    <div th:if="${expiredRequests != null and !expiredRequests.isEmpty()}" id="pg-expired-list" class="divide-y divide-line">
+                        <a th:each="req : ${expiredRequests}" th:href="@{/disabled/board/{id}(id=${req.id})}"
+                           class="pg-item block p-5 hover:bg-surface-muted transition-colors opacity-70">
+                            <div class="flex items-start gap-3">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 bg-red-50 text-red-400 text-xs font-semibold rounded-full">기간만료</span>
+                                        <span class="text-xs text-gray-400" th:text="${req.serviceCategory != null ? req.serviceCategory.name : ''}"></span>
+                                    </div>
+                                    <p class="text-sm font-semibold text-ink-muted truncate" th:text="${req.title}">제목</p>
+                                    <div class="flex items-center gap-3 mt-1.5 text-xs text-gray-400">
+                                        <span th:text="${#temporals.format(req.desiredStartDatetime, 'yyyy.MM.dd HH:mm')}">날짜</span>
+                                        <span th:text="${req.sido + ' ' + req.sigungu}">지역</span>
+                                    </div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-300 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                        </a>
+                    </div>
+                    <div th:if="${expiredRequests == null or expiredRequests.isEmpty()}" class="py-10 text-center text-sm text-gray-400">기간이 만료된 요청이 없어요</div>
+                    <div id="pg-expired-nav" class="hidden px-5 py-3 flex items-center justify-center gap-1"></div>
+                </div>
+            </div>
+
+            <!-- ── 내가 쓴 후기 서브탭 ── -->
+            <div id="msub-reviews" class="msub-content hidden">
+                <!-- 헤더: 건수 + 전체보기 -->
+                <div class="flex items-center justify-between px-5 py-3.5 border-b border-line">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-xs font-semibold text-ink-muted">내가 쓴 후기</span>
+                        <span class="px-1.5 py-0.5 text-[10px] font-bold bg-indigo-100 text-indigo-600 rounded-full"
+                              th:text="${myReviewCount != null ? myReviewCount : 0}">0</span>
+                    </div>
+                    <a th:href="@{/reviews/my}"
+                       class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+                        전체보기 →
+                    </a>
+                </div>
+                <!-- 최신 3개 후기 목록 -->
+                <div th:if="${myReviews != null and !myReviews.isEmpty()}" class="divide-y divide-line">
+                    <a th:each="review : ${myReviews}"
+                       th:href="@{/reviews/{id}(id=${review.id})}"
+                       class="block p-5 hover:bg-surface-muted transition-colors">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 font-bold text-xs flex-shrink-0"
+                                     th:text="${review.target.fullName != null ? #strings.substring(review.target.fullName, 0, 1) : '?'}">박</div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold text-ink truncate" th:text="${review.target.fullName + ' 활동지원사'}">활동지원사</p>
+                                    <p class="text-xs text-gray-400 truncate"
+                                       th:text="${review.helpRequest.serviceCategory != null ? review.helpRequest.serviceCategory.name : ''} + ' · ' + ${review.helpRequest.sido}">서비스</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-0.5 flex-shrink-0">
+                                <th:block th:each="i : ${#numbers.sequence(1,5)}">
+                                    <span th:text="${i <= review.rating ? '★' : '☆'}"
+                                          th:class="${i <= review.rating ? 'text-yellow-400' : 'text-gray-200'}" class="text-xs"></span>
+                                </th:block>
+                            </div>
+                        </div>
+                        <p class="text-xs text-ink-muted leading-relaxed line-clamp-2" th:text="${review.body}">후기 내용</p>
+                        <p class="text-[10px] text-gray-400 mt-1.5"
+                           th:text="${#temporals.format(review.createdAt, 'yyyy.MM.dd', new java.util.Locale('ko'))}">날짜</p>
+                    </a>
+                </div>
+                <!-- 빈 상태 -->
+                <div th:if="${myReviews == null or myReviews.isEmpty()}" class="py-10 text-center">
+                    <div class="w-10 h-10 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                        <svg class="w-5 h-5 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <p class="text-sm text-gray-500 font-medium">아직 작성한 후기가 없어요</p>
+                    <p class="text-xs text-gray-400 mt-1">활동이 완료되면 후기를 작성할 수 있어요</p>
+                </div>
+                <!-- 더 있을 경우 전체보기 버튼 -->
+                <div th:if="${myReviewCount != null and myReviewCount > 3}" class="p-4 border-t border-line">
+                    <a th:href="@{/reviews/my}"
+                       class="block w-full py-2.5 text-xs font-semibold text-indigo-600 bg-indigo-50 rounded-xl text-center hover:bg-indigo-100 transition-colors">
+                        후기 전체보기 (<span th:text="${myReviewCount}">0</span>건)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ───────── 이음마켓 탭 ───────── -->
+    <div id="main-tab-market" class="main-tab-content hidden">
+
+        <!-- 구매 내역 카드 -->
+        <div class="bg-surface rounded-2xl border border-line-strong overflow-hidden mb-3">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-line">
+                <div class="flex items-center gap-2">
+                    <span class="text-base">🛒</span>
+                    <h2 class="text-sm font-bold text-ink">구매 내역</h2>
+                    <span class="px-2 py-0.5 bg-orange-100 text-orange-600 rounded-full text-xs font-semibold"
+                          th:text="${myBuyChats != null ? myBuyChats.size() : 0}">0</span>
+                </div>
+                <a th:href="@{/market/chats}" class="text-xs text-orange-500 hover:text-orange-600 font-semibold">전체 보기 →</a>
+            </div>
+            <div th:if="${myBuyChats != null and !myBuyChats.isEmpty()}" id="pg-buy-list" class="divide-y divide-line">
+                <div th:each="chat : ${myBuyChats}" class="pg-item p-4 flex gap-3 items-center hover:bg-surface-muted transition-colors">
+                    <a th:href="@{/market/chat/{id}(id=${chat.chatId})}" class="flex-shrink-0">
+                        <div class="w-14 h-14 rounded-xl overflow-hidden bg-surface-hover flex items-center justify-center">
+                            <img th:if="${chat.postThumbnailUrl != null}" th:src="${chat.postThumbnailUrl}" th:alt="${chat.postTitle}" class="w-full h-full object-cover">
+                            <svg th:unless="${chat.postThumbnailUrl != null}" class="w-6 h-6 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                    </a>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-1.5 mb-0.5">
+                            <span class="text-[11px] font-semibold px-1.5 py-0.5 rounded-md"
+                                  th:text="${chat.postStatusLabel}"
+                                  th:classappend="${chat.postStatusLabel == '판매완료'} ? 'bg-surface-hover text-gray-500'
+                                                : (${chat.postStatusLabel == '예약중'} ? 'bg-amber-100 text-amber-700'
+                                                : 'bg-green-100 text-green-700')">판매중</span>
+                        </div>
+                        <p class="text-sm font-semibold text-ink truncate" th:text="${chat.postTitle}">상품명</p>
+                        <p class="text-xs text-gray-400 mt-0.5" th:text="'판매자: ' + ${chat.opponentEmail}">판매자</p>
+                    </div>
+                    <div class="flex-shrink-0 flex flex-col gap-1.5 items-end">
+                        <a th:href="@{/market/chat/{id}(id=${chat.chatId})}"
+                           class="px-2.5 py-1 text-xs font-semibold text-orange-500 border border-orange-200 rounded-lg hover:bg-orange-50 transition-all">
+                            채팅 보기
+                        </a>
+                        <a th:if="${chat.postStatusLabel == '판매완료' and !chat.hasReview}"
+                           th:href="@{/market/review/{chatId}/new(chatId=${chat.chatId})}"
+                           class="px-2.5 py-1 text-xs font-semibold text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-all">
+                            후기
+                        </a>
+                        <span th:if="${chat.postStatusLabel == '판매완료' and chat.hasReview}"
+                              class="px-2.5 py-1 text-xs font-medium text-gray-400 bg-surface-hover rounded-lg">
+                            후기 완료
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${myBuyChats == null or myBuyChats.isEmpty()}" class="py-10 text-center">
+                <p class="text-sm text-gray-400">구매한 상품이 없어요</p>
+                <a th:href="@{/market}" class="inline-block mt-3 text-xs text-orange-500 font-semibold hover:text-orange-600">이음마켓 둘러보기 →</a>
+            </div>
+            <div id="pg-buy-nav" class="hidden px-5 py-3 flex items-center justify-center gap-1"></div>
+        </div>
+
+        <div class="bg-surface rounded-2xl border border-line-strong overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-line">
+                <div class="flex items-center gap-2">
+                    <span class="text-base">🛍️</span>
+                    <h2 class="text-sm font-bold text-ink">판매 내역</h2>
+                    <span class="px-2 py-0.5 bg-orange-100 text-orange-600 rounded-full text-xs font-semibold"
+                          th:text="${myMarketPosts != null ? myMarketPosts.size() : 0}">0</span>
+                </div>
+                <a th:href="@{/market/new}"
+                   class="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition-all">
+                    + 상품 등록
+                </a>
+            </div>
+            <div class="flex border-b border-line px-5">
+                <button onclick="showMarketFilter('all')" id="mf-btn-all"
+                        class="mf-btn px-3 py-2.5 text-xs font-semibold text-orange-500 border-b-2 border-orange-500 -mb-px whitespace-nowrap">전체</button>
+                <button onclick="showMarketFilter('ACTIVE')" id="mf-btn-ACTIVE"
+                        class="mf-btn px-3 py-2.5 text-xs font-medium text-gray-400 hover:text-ink-muted transition-colors whitespace-nowrap">판매 중</button>
+                <button onclick="showMarketFilter('RESERVED')" id="mf-btn-RESERVED"
+                        class="mf-btn px-3 py-2.5 text-xs font-medium text-gray-400 hover:text-ink-muted transition-colors whitespace-nowrap">예약 중</button>
+                <button onclick="showMarketFilter('SOLD')" id="mf-btn-SOLD"
+                        class="mf-btn px-3 py-2.5 text-xs font-medium text-gray-400 hover:text-ink-muted transition-colors whitespace-nowrap">판매 완료</button>
+            </div>
+            <div id="market-post-list">
+                <div th:if="${myMarketPosts != null and !myMarketPosts.isEmpty()}" id="pg-sell-list" class="divide-y divide-line">
+                    <div th:each="post : ${myMarketPosts}"
+                         th:attr="data-status=${post.status.name()}"
+                         class="market-post-item pg-sell-item p-4 flex gap-4 hover:bg-surface-muted transition-colors">
+                        <a th:href="@{/market/{id}(id=${post.id})}" class="flex-shrink-0">
+                            <div class="w-20 h-20 rounded-xl overflow-hidden bg-surface-hover flex items-center justify-center">
+                                <img th:if="${post.thumbnailUrl != null}" th:src="${post.thumbnailUrl}" th:alt="${post.title}" class="w-full h-full object-cover">
+                                <svg th:unless="${post.thumbnailUrl != null}" class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                        </a>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+                                        <span th:text="${post.statusLabel}"
+                                              class="px-2 py-0.5 rounded-lg text-xs font-bold"
+                                              th:classappend="${post.status.name() == 'ACTIVE'} ? 'bg-green-100 text-green-700'
+                                                            : (${post.status.name() == 'RESERVED'} ? 'bg-amber-100 text-amber-700'
+                                                            : 'bg-surface-hover text-gray-500')">판매중</span>
+                                        <span class="text-xs text-gray-400" th:text="${post.categoryName}">카테고리</span>
+                                    </div>
+                                    <a th:href="@{/market/{id}(id=${post.id})}" class="text-sm font-semibold text-ink hover:text-orange-500 transition-colors line-clamp-1" th:text="${post.title}">상품명</a>
+                                    <p class="text-base font-bold text-orange-500 mt-0.5" th:text="${#numbers.formatInteger(post.price, 1, 'COMMA') + '원'}">10,000원</p>
+                                </div>
+                                <div class="flex flex-col gap-1 flex-shrink-0">
+                                    <a th:href="@{/market/{id}/edit(id=${post.id})}"
+                                       class="px-2.5 py-1 text-xs font-medium text-gray-500 border border-line-strong rounded-lg hover:bg-surface-muted transition-all text-center">수정</a>
+                                    <form th:action="@{/market/{id}/remove(id=${post.id})}" method="post" onsubmit="return confirm('삭제하시겠습니까?')">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                        <button type="submit" class="w-full px-2.5 py-1 text-xs font-medium text-red-400 border border-red-100 rounded-lg hover:bg-red-50 transition-all">삭제</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="mt-2 flex items-center gap-3 text-xs text-gray-400">
+                                <span th:text="${#temporals.format(post.createdAt, 'MM.dd')}">01.01</span>
+                                <span th:if="${post.status.name() == 'ACTIVE' or post.status.name() == 'RESERVED'}">
+                                    <a th:if="${post.chatCount > 0}" th:href="@{/market/chats}"
+                                       class="flex items-center gap-1 text-orange-500 font-semibold hover:text-orange-600 transition-colors">
+                                        💬 구매 희망자 <span th:text="${post.chatCount}">0</span>명
+                                    </a>
+                                    <span th:unless="${post.chatCount > 0}" class="text-gray-300">구매 희망자 없음</span>
+                                </span>
+                                <span th:if="${post.status.name() == 'SOLD'}" class="text-gray-400">거래 완료</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${myMarketPosts == null or myMarketPosts.isEmpty()}" class="py-12 text-center">
+                    <div class="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-2xl">🛍️</span>
+                    </div>
+                    <p class="text-sm text-gray-500 font-medium">등록한 상품이 없어요</p>
+                    <p class="text-xs text-gray-400 mt-1">이음마켓에서 첫 상품을 등록해보세요!</p>
+                    <a th:href="@{/market/new}" class="inline-flex items-center gap-1 mt-4 px-4 py-2 text-xs font-semibold text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition-all">
+                        + 상품 등록하기
+                    </a>
+                </div>
+            </div>
+            <div id="pg-sell-nav" class="hidden px-5 py-3 flex items-center justify-center gap-1"></div>
+            <div class="px-5 py-3 border-t border-line flex items-center justify-between">
+                <a th:href="@{/market/chats}" class="text-xs text-gray-500 hover:text-orange-500 transition-colors flex items-center gap-1">💬 채팅 목록 →</a>
+                <a th:href="@{/market}" class="text-xs text-gray-400 hover:text-ink-muted transition-colors">이음마켓 전체 보기 →</a>
+            </div>
+        </div>
+    </div>
+
+</section><!-- /tabs section -->
+
+<!-- 탈퇴 확인 모달 -->
+<div id="withdraw-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+    <div class="bg-surface rounded-2xl shadow-xl max-w-sm w-full p-6">
+        <h3 class="text-base font-bold text-ink mb-2">회원 탈퇴</h3>
+        <p class="text-sm text-gray-500 mb-4">탈퇴하면 계정 정보가 비활성화되며 되돌릴 수 없어요. 비밀번호를 입력해 확인해주세요.</p>
+        <form th:action="@{/mypage/withdraw}" method="post">
+            <input type="password" name="password" required placeholder="비밀번호"
+                   class="w-full px-3.5 py-2.5 text-sm border border-line-strong rounded-xl focus:outline-none focus:ring-2 focus:ring-red-300 mb-4">
+            <div class="flex gap-2">
+                <button type="button" onclick="closeWithdrawModal()"
+                        class="flex-1 px-4 py-2.5 text-sm font-semibold text-ink-muted bg-surface-hover rounded-xl hover:bg-gray-200 transition-all">
+                    취소
+                </button>
+                <button type="submit"
+                        class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-red-500 rounded-xl hover:bg-red-600 transition-all">
+                    탈퇴하기
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// ── 미니 달력 ──
+(function() {
+    const today = new Date();
+    let mYear = today.getFullYear(), mMonth = today.getMonth();
+    let events = [];
+
+    async function init() {
+        try {
+            const res = await fetch('/api/calendar/events');
+            events = await res.json();
+        } catch(e) {}
+        render();
+    }
+
+    // 해당 월의 날짜별 이벤트 맵 생성 (범위 지원)
+    function buildDateMap(year, month) {
+        const map = {};
+        events.forEach(ev => {
+            const start = ev.startDate || ev.date;
+            const end = ev.endDate || start;
+            const isSingle = start === end;
+            let cur = new Date(start + 'T00:00');
+            const endD = new Date(end + 'T00:00');
+            let first = true;
+            while (cur <= endD) {
+                if (cur.getFullYear() === year && cur.getMonth() === month) {
+                    const ds = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
+                    const isLast = cur.getTime() === endD.getTime();
+                    const pos = isSingle ? 'single' : (first ? 'start' : (isLast ? 'end' : 'mid'));
+                    if (!map[ds]) map[ds] = [];
+                    map[ds].push({...ev, position: pos});
+                }
+                cur.setDate(cur.getDate() + 1);
+                first = false;
+            }
+        });
+        return map;
+    }
+
+    function render() {
+        const y = mYear, m = mMonth;
+        document.getElementById('mini-month-title').textContent = `${y}년 ${m+1}월`;
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+        const firstDay = new Date(y, m, 1).getDay();
+        const daysInMonth = new Date(y, m+1, 0).getDate();
+        const dateMap = buildDateMap(y, m);
+        const grid = document.getElementById('mini-cal-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        for (let i = 0; i < firstDay; i++) {
+            const el = document.createElement('div');
+            el.style.cssText = 'height:46px; position:relative;';
+            grid.appendChild(el);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const evs = dateMap[dateStr] || [];
+            const dow = (firstDay + d - 1) % 7;
+            const isToday = dateStr === todayStr;
+
+            const cell = document.createElement('div');
+            cell.style.cssText = 'height:46px; position:relative; cursor:pointer;';
+            cell.onclick = () => window.location.href = '/calendar';
+
+            // 이벤트 바 (숫자 원 뒤에 배치) — matched > completed > others 우선순위
+            const ev = evs.find(e => e.type === 'matched') || evs.find(e => e.type === 'completed') || evs[0];
+            if (ev && ev.position !== 'single') {
+                const bar = document.createElement('div');
+                const barBg = ev.type === 'matched'   ? 'rgba(217,70,239,0.45)'
+                            : ev.type === 'completed' ? 'rgba(249,115,22,0.35)'
+                            : 'rgba(255,255,255,0.38)';
+                bar.style.cssText = `position:absolute; top:3px; height:26px; background:${barBg}; z-index:1;`;
+                if (ev.position === 'start') { bar.style.left = '50%'; bar.style.right = '0'; }
+                else if (ev.position === 'end') { bar.style.left = '0'; bar.style.right = '50%'; }
+                else { bar.style.left = '0'; bar.style.right = '0'; }
+                cell.appendChild(bar);
+            }
+
+            // 날짜 숫자 (이벤트 start/end/single이면 컬러 원)
+            const num = document.createElement('span');
+            num.style.cssText = 'position:absolute; top:3px; left:50%; transform:translateX(-50%); width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:50%; font-size:12px; font-weight:500; z-index:10;';
+            num.textContent = d;
+            // 마커 규칙(달력 상세와 동일): 미완료(등록)=테두리만 있는 빈 원, 매칭/완료=색 채운 원.
+            // 매칭/완료는 범위 중간(mid)이어도 색을 유지해 범례와 일치시킨다.
+            if (ev && (ev.position !== 'mid' || ev.type === 'matched' || ev.type === 'completed')) {
+                if (ev.type === 'matched') {
+                    num.style.background = '#d946ef';
+                    num.style.color = 'white';
+                    num.style.boxShadow = '0 0 0 2px rgba(255,255,255,0.9)';
+                } else if (ev.type === 'completed') {
+                    num.style.background = '#f97316';
+                    num.style.color = 'white';
+                    num.style.boxShadow = '0 0 0 2px rgba(255,255,255,0.9)';
+                } else {
+                    num.style.background = 'transparent';
+                    num.style.color = 'white';
+                    num.style.border = '2px solid rgba(255,255,255,0.9)';
+                }
+                num.style.fontWeight = '700';
+            } else if (isToday) {
+                num.style.fontWeight = '700';
+                num.style.color = 'white';
+            } else if (dow === 0) {
+                num.style.color = 'rgba(252,165,165,1)';
+            } else if (dow === 6) {
+                num.style.color = 'rgba(147,197,253,1)';
+            } else {
+                num.style.color = 'white';
+            }
+            cell.appendChild(num);
+
+            // 오늘 표시 — 셀 배경 하이라이트(반투명 흰색). 그라데이션 헤더 위에서도 잘 보이고,
+            // 마커(숫자 원)와 다른 채널(셀 배경)이라 매칭/완료 원과 겹치지 않는다.
+            // inset 대신 고정 정사각형(36px)으로 중앙 배치 — 셀 너비가 높이(46px)보다 넓어
+            // inset을 쓰면 가로로 퍼진 직사각형이 되므로 크기를 고정한다.
+            if (isToday) {
+                const todayHi = document.createElement('span');
+                todayHi.style.cssText = 'position:absolute; top:3px; left:50%; transform:translateX(-50%); width:36px; height:36px; border-radius:9px; background:rgba(255,255,255,0.20); z-index:0;';
+                cell.appendChild(todayHi);
+            }
+
+            grid.appendChild(cell);
+        }
+    }
+
+    window.miniPrev = function() { mMonth--; if(mMonth<0){mMonth=11;mYear--;} render(); };
+    window.miniNext = function() { mMonth++; if(mMonth>11){mMonth=0;mYear++;} render(); };
+
+    document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+
+<script>
+    // 메인 탭 전환 (회원정보 | 매칭게시판 | 이음마켓)
+    function showMainTab(name, idx) {
+        document.querySelectorAll('.main-tab-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById('main-tab-' + name).classList.remove('hidden');
+        document.querySelectorAll('.main-tab-btn').forEach(btn => {
+            btn.classList.remove('text-white', 'font-semibold');
+            btn.classList.add('text-gray-400', 'font-medium');
+        });
+        const activeBtn = document.getElementById('main-tab-btn-' + name);
+        activeBtn.classList.add('text-white', 'font-semibold');
+        activeBtn.classList.remove('text-gray-400', 'font-medium');
+        document.getElementById('main-tab-pill').style.transform = `translateX(${idx * 100}%)`;
+    }
+
+    // 매칭게시판 서브탭 전환 (내 요청 현황 | 후기 작성) — pill 스타일
+    function showMatchingSubTab(name) {
+        document.querySelectorAll('.msub-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById('msub-' + name).classList.remove('hidden');
+        document.querySelectorAll('.msub-btn').forEach(btn => {
+            btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm', 'font-semibold');
+            btn.classList.add('bg-surface', 'text-gray-500', 'border', 'border-line-strong', 'font-medium');
+        });
+        const activeBtn = document.getElementById('msub-btn-' + name);
+        activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm', 'font-semibold');
+        activeBtn.classList.remove('bg-surface', 'text-gray-500', 'border', 'border-line-strong', 'font-medium');
+    }
+
+    // 요청 현황 상태 탭 전환
+    function showRequestTab(name) {
+        document.querySelectorAll('.rtab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.rtab-btn').forEach(btn => {
+            btn.classList.remove('border-indigo-500', 'text-indigo-600');
+            btn.classList.add('border-transparent', 'text-gray-400');
+        });
+        document.getElementById('rtab-' + name).classList.remove('hidden');
+        const active = document.getElementById('rtab-btn-' + name);
+        active.classList.remove('border-transparent', 'text-gray-400');
+        active.classList.add('border-indigo-500', 'text-indigo-600');
+    }
+
+    // 이음마켓 상태 필터
+    var _currentSellFilter = 'all';
+    function showMarketFilter(status) {
+        _currentSellFilter = status;
+        document.querySelectorAll('.mf-btn').forEach(btn => {
+            btn.classList.remove('text-orange-500', 'border-b-2', 'border-orange-500', 'font-semibold');
+            btn.classList.add('text-gray-400', 'font-medium');
+        });
+        const activeBtn = document.getElementById('mf-btn-' + status);
+        if (activeBtn) {
+            activeBtn.classList.add('text-orange-500', 'border-b-2', 'border-orange-500', 'font-semibold');
+            activeBtn.classList.remove('text-gray-400', 'font-medium');
+        }
+        if (window._sellPaginateRender) window._sellPaginateRender(0);
+    }
+
+    // 별점 설정
+    function setRating(requestId, value) {
+        const container = document.getElementById('stars-' + requestId);
+        const stars = container.querySelectorAll('.star-btn');
+        stars.forEach((star, idx) => {
+            star.classList.toggle('text-yellow-400', idx < value);
+            star.classList.toggle('text-gray-300', idx >= value);
+        });
+        document.getElementById('rating-input-' + requestId).value = value;
+    }
+
+    // 탈퇴 모달
+    function openWithdrawModal() { document.getElementById('withdraw-modal').classList.remove('hidden'); }
+    function closeWithdrawModal() { document.getElementById('withdraw-modal').classList.add('hidden'); }
+
+    function toggleMoreMarketReviews() {
+        document.getElementById('more-market-reviews').classList.toggle('hidden');
+    }
+</script>
+
+<script>
+    document.getElementById('profileFileInput').addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) return;
+        const fd = new FormData();
+        fd.append('file', file);
+        fetch('/api/profile/image', { method: 'POST', body: fd })
+            .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+            .then(data => {
+                const img = document.getElementById('mypage-profile-img');
+                img.src = data.imageUrl + '?t=' + Date.now();
+                img.className = 'w-full h-full object-cover object-top';
+                const def = document.getElementById('profile-default');
+                if (def) def.className = 'hidden';
+            })
+            .catch(() => alert('이미지 업로드에 실패했습니다. 잠시 후 다시 시도해주세요.'));
+        this.value = '';
+    });
+</script>
+
+<script>
+(function () {
+    var PER_PAGE = 3;
+
+    function initPagination(listId, navId) {
+        var list = document.getElementById(listId);
+        var nav  = document.getElementById(navId);
+        if (!list || !nav) return;
+        var items = Array.from(list.querySelectorAll('.pg-item'));
+        if (items.length <= PER_PAGE) return;
+
+        var page = 0;
+        var total = Math.ceil(items.length / PER_PAGE);
+
+        function render() {
+            items.forEach(function (el, i) {
+                el.style.display = (i >= page * PER_PAGE && i < (page + 1) * PER_PAGE) ? '' : 'none';
+            });
+            nav.innerHTML = '';
+            nav.classList.remove('hidden');
+
+            var prev = document.createElement('button');
+            prev.type = 'button';
+            prev.textContent = '‹';
+            prev.disabled = page === 0;
+            prev.className = 'w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold transition-colors ' +
+                (page === 0 ? 'text-gray-300 cursor-default' : 'text-indigo-500 hover:bg-indigo-50');
+            prev.onclick = function () { if (page > 0) { page--; render(); } };
+            nav.appendChild(prev);
+
+            for (var i = 0; i < total; i++) {
+                (function (idx) {
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = idx + 1;
+                    btn.className = 'w-7 h-7 flex items-center justify-center rounded-full text-xs font-semibold transition-colors ' +
+                        (idx === page ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-surface-hover');
+                    btn.onclick = function () { page = idx; render(); };
+                    nav.appendChild(btn);
+                })(i);
+            }
+
+            var next = document.createElement('button');
+            next.type = 'button';
+            next.textContent = '›';
+            next.disabled = page === total - 1;
+            next.className = 'w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold transition-colors ' +
+                (page === total - 1 ? 'text-gray-300 cursor-default' : 'text-indigo-500 hover:bg-indigo-50');
+            next.onclick = function () { if (page < total - 1) { page++; render(); } };
+            nav.appendChild(next);
+        }
+
+        render();
+    }
+
+    initPagination('pg-waiting-list',   'pg-waiting-nav');
+    initPagination('pg-matched-list',   'pg-matched-nav');
+    initPagination('pg-completed-list', 'pg-completed-nav');
+    initPagination('pg-expired-list',   'pg-expired-nav');
+    initPagination('pg-buy-list',       'pg-buy-nav');
+
+    // 판매 내역 — 필터 연동 페이지네이션
+    (function () {
+        var list = document.getElementById('pg-sell-list');
+        var nav  = document.getElementById('pg-sell-nav');
+        if (!list || !nav) return;
+        var allItems = Array.from(list.querySelectorAll('.pg-sell-item'));
+
+        function renderSell(page) {
+            var visible = allItems.filter(function (el) {
+                return _currentSellFilter === 'all' || el.dataset.status === _currentSellFilter;
+            });
+            // hide all first
+            allItems.forEach(function (el) { el.style.display = 'none'; });
+            if (visible.length === 0) { nav.classList.add('hidden'); nav.innerHTML = ''; return; }
+
+            var total = Math.ceil(visible.length / PER_PAGE);
+            page = Math.max(0, Math.min(page, total - 1));
+            visible.forEach(function (el, i) {
+                el.style.display = (i >= page * PER_PAGE && i < (page + 1) * PER_PAGE) ? '' : 'none';
+            });
+
+            if (visible.length <= PER_PAGE) { nav.classList.add('hidden'); nav.innerHTML = ''; return; }
+
+            nav.innerHTML = '';
+            nav.classList.remove('hidden');
+
+            var prev = document.createElement('button');
+            prev.type = 'button'; prev.textContent = '‹';
+            prev.disabled = page === 0;
+            prev.className = 'w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold transition-colors ' +
+                (page === 0 ? 'text-gray-300 cursor-default' : 'text-orange-500 hover:bg-orange-50');
+            prev.onclick = function () { renderSell(page - 1); };
+            nav.appendChild(prev);
+
+            for (var i = 0; i < total; i++) {
+                (function (idx) {
+                    var btn = document.createElement('button');
+                    btn.type = 'button'; btn.textContent = idx + 1;
+                    btn.className = 'w-7 h-7 flex items-center justify-center rounded-full text-xs font-semibold transition-colors ' +
+                        (idx === page ? 'bg-orange-500 text-white' : 'text-gray-500 hover:bg-surface-hover');
+                    btn.onclick = function () { renderSell(idx); };
+                    nav.appendChild(btn);
+                })(i);
+            }
+
+            var next = document.createElement('button');
+            next.type = 'button'; next.textContent = '›';
+            next.disabled = page === total - 1;
+            next.className = 'w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold transition-colors ' +
+                (page === total - 1 ? 'text-gray-300 cursor-default' : 'text-orange-500 hover:bg-orange-50');
+            next.onclick = function () { renderSell(page + 1); };
+            nav.appendChild(next);
+        }
+
+        window._sellPaginateRender = renderSell;
+        renderSell(0);
+    })();
+})();
+</script>
+</th:block>
+</html>
